@@ -128,7 +128,7 @@ describe('сдача и торговля', () => {
 
 describe('розыгрыш', () => {
   const play = (over: Partial<Play> = {}): Play => ({
-    trick: [], exposed: null, leader: 0, turn: 0, trickNo: 0, won: [0, 0, 0], trump: null, seen: [], ...over,
+    trick: [], exposed: null, leader: 0, turn: 0, trickNo: 0, won: [0, 0, 0], trump: null, seen: [], last: null, ...over,
   });
 
   it('обязательно отвечать в масть, иначе козырем, иначе любой картой', () => {
@@ -154,6 +154,25 @@ describe('розыгрыш', () => {
     const none = play({ exposed: c('S', 14), leader: 1, trick: [t(1, c('H', 8)), t(2, c('H', 10)), t(0, c('D', 7))] });
     expect(trickWinner(none)).toBe(1);
   });
+
+  it('после третьей карты взятка остаётся видна в play.last вместе со взявшим', () => {
+    const bot = heuristicBot();
+    let g = newGame(SOCHI, 7);
+    // доиграть торговлю и прочее до первой взятки
+    while (g.phase !== 'play' || g.deal.play!.trickNo === 0) {
+      const before = g.phase === 'play' ? g.deal.play!.trick.map((t) => ({ ...t })) : null;
+      const seat = actingSeat(g);
+      g = apply(g, seat === null ? { type: 'next' } : bot(viewFor(g, seat)));
+      if (g.phase === 'play' && g.deal.play!.trickNo === 1) {
+        const last = g.deal.play!.last!;
+        expect(last.cards).toHaveLength(3);
+        expect(last.cards.slice(0, 2)).toEqual(before);
+        expect(g.deal.play!.won[last.winner]).toBe(1);
+        expect(g.deal.play!.trick).toHaveLength(0);
+      }
+    }
+    expect(g.deal.play!.last).not.toBeNull();
+  });
 });
 
 describe('очки', () => {
@@ -162,7 +181,7 @@ describe('очки', () => {
     auction: { turn: 0, high: null, highBidder: null, passed: [false, false, false], spoke: [false, false, false] },
     declarer: 1, winningBid: null, contract: tricks(6, 'S'), whistChoice: [null, null, null], whistTurn: null,
     whisters: [2, 0], passer: null, mode: 'tricks',
-    play: { trick: [], exposed: null, leader: 0, turn: 0, trickNo: 10, won: [2, 6, 2], trump: 'S', seen: [] },
+    play: { trick: [], exposed: null, leader: 0, turn: 0, trickNo: 10, won: [2, 6, 2], trump: 'S', seen: [], last: null },
     ...over,
   });
 

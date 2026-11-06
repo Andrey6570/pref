@@ -4,4 +4,3 @@ node_modules/
 *.apk
 *.aab
 dist/
-!releases/*.apk

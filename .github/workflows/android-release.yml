@@ -1,0 +1,53 @@
+# Сборка APK и публикация релиза: при пуше тега v* (например v0.2.0) или вручную из вкладки Actions.
+name: Android APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Android SDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" "ndk;27.1.12297006" "cmake;3.22.1" > /dev/null
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        run: ./scripts/build-apk.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: dist/*.apk
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+          body_path: RELEASE_NOTES.md

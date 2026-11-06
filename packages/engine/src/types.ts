@@ -36,6 +36,8 @@ export interface Play {
   trump: Suit | null;
   /** Все карты, выложенные на стол (в том числе открытые карты прикупа). */
   seen: Card[];
+  /** Последняя завершённая взятка: её можно показать игроку. */
+  last: { cards: TrickCard[]; winner: Seat } | null;
 }
 
 export interface DealResult {

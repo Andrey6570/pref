@@ -240,7 +240,7 @@ function startPlay(g: Game, leader: Seat): void {
   const trump = d.mode === 'tricks' ? trumpOf(d.contract) : null;
   const play: Play = {
     trick: [], exposed: null, leader, turn: leader, trickNo: 0,
-    won: [0, 0, 0], trump, seen: [],
+    won: [0, 0, 0], trump, seen: [], last: null,
   };
   d.play = play;
   openTalonCard(g);
@@ -273,6 +273,7 @@ function playCard(g: Game, seat: Seat, card: Card): void {
   const winner = trickWinner(p);
   p.won[winner] = (p.won[winner] ?? 0) + 1;
   p.trickNo += 1;
+  p.last = { cards: p.trick, winner };
   if (p.trickNo === 10) {
     finishDeal(g);
     return;

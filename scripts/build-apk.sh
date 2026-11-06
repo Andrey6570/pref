@@ -8,8 +8,10 @@ ABIS="${ABIS:-arm64-v8a,armeabi-v7a}"
 
 cd "$ROOT/apps/mobile"
 # android/ генерируется из app.json и не хранится в git
+# prebuild переписывает scripts в package.json: сохраняем и возвращаем как было
+cp package.json /tmp/pref-package.json.bak
 CI=1 npx expo prebuild --platform android --no-install
-git -C "$ROOT" checkout -- apps/mobile/package.json 2>/dev/null || true  # prebuild переписывает scripts
+cp /tmp/pref-package.json.bak package.json
 echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
 cd android
