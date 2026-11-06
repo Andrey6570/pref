@@ -44,15 +44,12 @@ APK подписан debug-ключом: подходит для установ�
 
 ### Релизы
 
-Готовые APK лежат в разделе **Releases** репозитория. Новый релиз собирает GitHub Actions
-(`.github/workflows/android-release.yml`): поднять версию в `apps/mobile/app.json`
-(`version` и `android.versionCode`), описать изменения в `RELEASE_NOTES.md` и запушить тег:
+Готовые APK лежат в разделе **Releases** репозитория. Их собирает GitHub Actions
+(`.github/workflows/android-release.yml`): достаточно поднять версию в `apps/mobile/app.json`
+(`version` и `android.versionCode`), описать изменения в `RELEASE_NOTES.md` и запушить в `main` —
+релиз `v<версия>` с APK появится сам.
 
-```bash
-git tag v0.2.0 && git push origin v0.2.0
-```
-
-Без тега сборку можно запустить вручную во вкладке Actions: APK будет в артефактах запуска.
+Сборку можно запустить и вручную во вкладке Actions; если релиз с этой версией уже есть, APK будет только в артефактах запуска.
 
 Перед публикацией:
 1. В `apps/mobile/app.json` заменить `com.example.preferans` (`ios.bundleIdentifier` и `android.package`) на свой идентификатор.

@@ -1,8 +1,12 @@
-# Сборка APK и публикация релиза: при пуше тега v* (например v0.2.0) или вручную из вкладки Actions.
+# Сборка APK и публикация релиза v<версия из app.json>.
+# Запускается, когда в main меняется версия приложения (app.json), при пуше тега v* или вручную из Actions.
+# Если релиз с такой версией уже есть, APK только собирается (артефакт запуска).
 name: Android APK
 
 on:
   push:
+    branches: [main]
+    paths: ['apps/mobile/app.json', '.github/workflows/android-release.yml']
     tags: ['v*']
   workflow_dispatch:
 
@@ -15,6 +19,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Version
+        id: ver
+        run: |
+          v=$(node -p "require('./apps/mobile/app.json').expo.version")
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$v" > /dev/null; then echo "exists=true" >> "$GITHUB_OUTPUT"; fi
 
       - uses: actions/setup-node@v4
         with:
@@ -46,8 +59,11 @@ jobs:
           path: dist/*.apk
 
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || steps.ver.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Преферанс ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || steps.ver.outputs.tag }}
           files: dist/*.apk
           body_path: RELEASE_NOTES.md
